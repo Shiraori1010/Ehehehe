@@ -1,0 +1,147 @@
+
+
+CREATE TABLE Continent (
+    continent_id INT PRIMARY KEY AUTO_INCREMENT,
+    continent_name VARCHAR(50) NOT NULL
+);
+
+CREATE TABLE Country (
+    country_id INT PRIMARY KEY AUTO_INCREMENT,
+    country_name VARCHAR(50) NOT NULL,
+    continent_id INT,
+    population BIGINT,
+    gdp_per_capita INT,
+    area BIGINT,
+    FOREIGN KEY (continent_id) REFERENCES Continent(continent_id)
+);
+
+CREATE TABLE Leader (
+    leader_id INT PRIMARY KEY AUTO_INCREMENT,
+    leader_name VARCHAR(100),
+    leader_title VARCHAR(100),
+    country_id INT,
+    FOREIGN KEY (country_id) REFERENCES Country(country_id)
+);
+
+CREATE TABLE Organization (
+    organization_id INT PRIMARY KEY AUTO_INCREMENT,
+    organization_name VARCHAR(100) NOT NULL
+);
+
+CREATE TABLE Treaty (
+    treaty_id INT PRIMARY KEY AUTO_INCREMENT,
+    treaty_name VARCHAR(100) NOT NULL
+);
+
+CREATE TABLE Country_Organization (
+    country_id INT,
+    organization_id INT,
+    FOREIGN KEY (country_id) REFERENCES Country(country_id),
+    FOREIGN KEY (organization_id) REFERENCES Organization(organization_id)
+);
+
+CREATE TABLE Country_Treaty (
+    country_id INT,
+    treaty_id INT,
+    FOREIGN KEY (country_id) REFERENCES Country(country_id),
+    FOREIGN KEY (treaty_id) REFERENCES Treaty(treaty_id)
+);
+
+-- 2. Insert Data
+
+-- Continents
+INSERT INTO Continent (continent_name) VALUES 
+('Asia'), ('Europe'), ('Africa'), ('North America'), ('South America');
+
+-- Countries
+INSERT INTO Country (country_name, continent_id, population, gdp_per_capita, area) VALUES 
+
+('Japan', 1, 125000000, 42000, 377975),
+('South Korea', 1, 51700000, 31000, 100210),
+('Canada', 4, 38000000, 45000, 9984670),
+('France', 2, 67000000, 39000, 551695),
+('Mongolia', 2, 3400000, 12000, 1564116);
+
+-- Leaders
+INSERT INTO Leader (leader_name, leader_title, country_id) VALUES 
+('Fumio Kishida', 'Prime Minister', 1),
+('Yoon Suk-yeol', 'President', 2),
+('Justin Trudeau', 'Prime Minister', 3),
+('Emmanuel Macron', 'President', 4),
+('Angela Merkel', 'Former Chancellor', NULL);
+
+-- Organizations
+INSERT INTO Organization (organization_name) VALUES 
+('Global Health Council'),
+('World Trade Organization'),
+('UNESCO'),
+('Red Cross'),
+('WHO');
+
+-- Treaties
+INSERT INTO Treaty (treaty_name) VALUES 
+('Climate Pact'),
+('Nuclear Non-Proliferation'),
+('Biodiversity Agreement'),
+('Cybersecurity Treaty'),
+('Water Security Pact');
+
+-- Country - Organization Memberships
+INSERT INTO Country_Organization VALUES 
+(1, 2), (1, 1),
+(2, 3), (2, 5),
+(3, 5), (3, 1),
+(4, 1), (4, 2),
+(5, 4), (5, 3);
+
+-- Country - Treaty Signings
+INSERT INTO Country_Treaty VALUES 
+(1, 1),
+(2, 4),
+(3, 2),
+(4, 3),
+(5, 5);
+
+
+
+
+
+
+
+
+
+
+
+SELECT c.country_name AS 'Country Name', ct.continent_name AS 'Continent Name'
+FROM Country c
+JOIN Continent ct ON c.continent_id = ct.continent_id
+WHERE ct.continent_name = 'Asia' AND c.gdp_per_capita > 20000;
+
+-- Task 2: All countries with leader info, show 'No Leader' where missing
+
+SELECT 
+    c.country_name AS 'Country Name', 
+    COALESCE(l.leader_name, 'No Leader') AS 'Leader Name',
+    COALESCE(l.leader_title, 'No Leader') AS 'Leader Title'
+FROM Country c
+LEFT JOIN Leader l ON c.country_id = l.country_id;
+
+-- Task 3: Leader with country and continent
+
+SELECT 
+    l.leader_name AS 'Leader Name',
+    c.country_name AS 'Country Name',
+    ct.continent_name AS 'Continent Name'
+FROM Leader l
+JOIN Country c ON l.country_id = c.country_id
+JOIN Continent ct ON c.continent_id = ct.continent_id;
+
+-- Task 4: Continent with total population > 300M
+
+SELECT 
+    ct.continent_name AS 'Continent Name', 
+    SUM(c.population) AS 'Total Population'
+FROM Country c
+JOIN Continent ct ON c.continent_id = ct.continent_id
+GROUP BY ct.continent_name
+HAVING SUM(c.population) > 300000000
